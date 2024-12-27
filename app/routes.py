@@ -49,7 +49,7 @@ def init_app(app):
         user = User.query.filter_by(email=email).first()
 
         if not user:
-            flash("Invalid email or password.", "error")
+            flash("User not found.", "error")
             return redirect(url_for('login_page'))
 
         # Check if the password matches the hashed password in the database
