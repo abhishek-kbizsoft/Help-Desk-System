@@ -1,10 +1,11 @@
-# __init__.py
-
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
-# Initialize the database object
+# Initialize the database and migration objects
 db = SQLAlchemy()
+migrate = Migrate()
+
 
 def create_app():
     app = Flask(__name__)
@@ -13,12 +14,9 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    # Initialize the database with the app
+    # Initialize the database and migration with the app
     db.init_app(app)
-
-    # Ensure tables are created when the app starts
-    with app.app_context():
-        db.create_all()  # Create tables
+    migrate.init_app(app, db)
 
     # Import and initialize routes
     from .routes import init_app  # Import init_app function from routes.py

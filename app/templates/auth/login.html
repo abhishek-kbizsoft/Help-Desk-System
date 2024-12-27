@@ -19,7 +19,8 @@
         <div class="mb-4">
             <ul>
                 {% for category, message in messages %}
-                <li class="text-md text-center {% if category == 'success' %}text-green-500{% elif category == 'error' %}text-red-500{% endif %}">
+                <li
+                    class="text-md text-center {% if category == 'success' %}text-green-500{% elif category == 'error' %}text-red-500{% endif %}">
                     {{ message }}
                 </li>
                 {% endfor %}
@@ -27,7 +28,7 @@
         </div>
         {% endif %}
         {% endwith %}
-        
+
 
         <!-- Add User Form -->
         <form action="/auth/login" method="POST">
@@ -37,16 +38,21 @@
                     class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
             </div>
 
-            <div class="mb-6">
+            <div class="mb-4">
                 <label for="password" class="block text-sm font-semibold text-gray-700">Password</label>
                 <input type="password" id="password" name="password" placeholder="Password" required
                     class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
             </div>
 
+
             <button type="submit"
                 class="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
                 Login
             </button>
+
+            <div class="my-3">
+                <a class="text-md text-blue-500" href="/register">Register now</a>
+            </div>
         </form>
     </div>
 </body>
