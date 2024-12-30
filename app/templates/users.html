@@ -1,35 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Users List</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
 
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Users List</h1>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="mb-4">
+        <ul>
+            {% for category, message in messages %}
+            <li
+                class="text-md text-center {% if category == 'success' %}text-green-500{% elif category == 'error' %}text-red-500{% endif %}">
+                {{ message }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endwith %}
 
     <!-- Table to display users -->
     <div class="overflow-x-auto shadow-md sm:rounded-lg w-full max-w-4xl">
         <table class="w-full text-sm text-left text-gray-500 bg-white">
             <thead class="text-xs text-center text-gray-700 uppercase bg-gray-200">
                 <tr>
+                    <th scope="col" class="px-6 py-3">ID</th>
                     <th scope="col" class="px-6 py-3">Username</th>
                     <th scope="col" class="px-6 py-3">Email</th>
                     <th scope="col" class="px-6 py-3">Date</th>
+                    <th scope="col" class="px-6 py-3">Action</th>
                 </tr>
             </thead>
             <tbody>
+                {% if users %}
                 {% for user in users %}
                 <tr class="border-b hover:bg-gray-100 text-center">
+                    <td class="px-6 py-4 text-gray-800">{{ user.id }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ user.username }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ user.email }}</td>
-                    <td class="px-6 py-4 text-gray-800">{{ user.created_at_formatted  }}</td>
+                    <td class="px-6 py-4 text-gray-800">{{ user.created_at_formatted }}</td>
+                    <td class="py-4 flex justify-center items-center gap-3">
+                        <form method="POST" action="{{ url_for('delete_user') }}">
+                            <input type="hidden" name="id" value={{user.id}}>
+                            <button class="bg-red-500 text-white w-10 h-10 text-lg rounded" type="submit"><ion-icon
+                                    name="trash-outline"></ion-icon></button>
+                        </form>
+                    </td>
                 </tr>
                 {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No users found.</td>
+                </tr>
+                {% endif %}
             </tbody>
         </table>
+
+        <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     </div>
 </body>
+
 </html>

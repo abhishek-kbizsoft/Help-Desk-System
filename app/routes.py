@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db  # Import db from __init__.py
 from .models import User, Ticket
@@ -93,12 +93,35 @@ def init_app(app):
     
     @app.route('/users')
     def users():
+        
+        if 'user_id' not in session:
+            flash("You must be logged in to view this page.", "error")
+            return redirect(url_for('login_page'))
+        
         all_users = User.query.order_by(User.id.desc()).all()
 
         for user in all_users:
             user.created_at_formatted = user.created_at.strftime('%d-%m-%Y') 
 
         return render_template('users.html', users=all_users)
+
+    @app.route("/delete_user", methods=['POST'])
+    def delete_user():
+        user_id = request.form.get('id')
+        
+        # Find the user by ID
+        user = User.query.get(user_id)
+        
+        if user:
+            # If user exists, delete it
+            db.session.delete(user)
+            db.session.commit()
+            flash("User deleted successfully", "success")
+        else:
+            # If user does not exist, show error
+            flash("User not found", "error")
+
+        return redirect(url_for('users'))
     
     @app.route('/tickets')
     def tickets():
@@ -107,20 +130,39 @@ def init_app(app):
             return redirect(url_for('login_page'))
         
         search_term = request.args.get('search', '')
-        
+        page = request.args.get('page', 1, type=int)
+        per_page = 5  # Number of tickets per page
+
+        # Query tickets with optional search term
         if search_term:
-            tickets = Ticket.query.filter(
-            Ticket.user_id == session['user_id'],
-            (Ticket.title.contains(search_term) | Ticket.description.contains(search_term))
-        ).order_by(Ticket.id.desc()).all()
+            query = Ticket.query.filter(
+                Ticket.user_id == session['user_id'],
+                (Ticket.title.contains(search_term) | Ticket.description.contains(search_term))
+            )
         else:
-            tickets = Ticket.query.filter_by(user_id=session['user_id']).order_by(Ticket.id.desc()).all()
+            query = Ticket.query.filter_by(user_id=session['user_id'])
         
+        # Apply ordering and pagination
+        pagination = query.order_by(Ticket.id.desc()).paginate(page=page, per_page=per_page)
+        
+        ticket_count = query.count()
+        
+        # Handle invalid page numbers
+        if page > pagination.pages and pagination.pages > 0:
+            return redirect(url_for('tickets', page=1, search=search_term))
 
-        for ticket in tickets:
-            ticket.created_at_formatted = ticket.created_at.strftime('%d-%m-%Y')  # Format the created_at date
+        # Format the `created_at` field for each ticket on the current page
+        for ticket in pagination.items:
+            ticket.created_at_formatted = ticket.created_at.strftime('%d-%m-%Y')
 
-        return render_template('tickets/index.html', tickets=tickets, search_term=search_term)
+        # Render the template with paginated tickets
+        return render_template(
+            'tickets/index.html',
+            tickets=pagination.items,       # Tickets for the current page
+            tickets_count=ticket_count,       # Tickets count
+            pagination=pagination,          # Pagination object for navigation
+            search_term=search_term         # Retain the search term in the template
+        )
     
     @app.route('/add-ticket', methods=['GET'])
     def add_ticket_view():
@@ -208,8 +250,31 @@ def init_app(app):
             flash("Ticket not found", "error")
 
         return redirect(url_for('tickets'))
-    
-    @app.route('/')
+
+    @app.route("/delete_all_ticket", methods=['POST'])
+    def delete_all_ticket():
+        # Ensure the user is logged in by checking session['user_id']
+        if 'user_id' not in session:
+            flash("You must be logged in to perform this action.", "error")
+            return redirect(url_for('login_page'))
+
+        user_id = session['user_id']
+        
+        # Get all tickets for the logged-in user
+        tickets = Ticket.query.filter_by(user_id=user_id).all()
+
+        if tickets:
+            # Delete all tickets associated with the current user
+            for ticket in tickets:
+                db.session.delete(ticket)
+            db.session.commit()
+            flash("All tickets deleted successfully", "success")
+        else:
+            # If no tickets found for the user
+            flash("No tickets found for the user.", "error")
+
+        return redirect(url_for('tickets'))
+
     
     
     @app.route('/auth/logout')

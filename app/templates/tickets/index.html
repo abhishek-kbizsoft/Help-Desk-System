@@ -47,15 +47,6 @@
 
     <div class="container mx-auto my-10">
         <h1 class="text-3xl text-center font-bold text-gray-800 mb-6">Tickets</h1>
-        <div class="w-full max-w-4xl mx-auto flex py-3 px-4 items-center justify-end gap-3 bg-white">
-            <form action="/tickets" method="get" class="flex justify-center items-center">
-                <input type="text" class="leading-none h-10 rounded-none w-36 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" name="search" value="{{ search_term  }}" placeholder="Search..">
-                <button class="bg-blue-500 rounded-none w-10 h-10 text-white text-lg rounded" type="submit"><ion-icon name="search-outline"></ion-icon></button>
-            </form>
-            <a href="/add-ticket"
-                class="text-white block bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">ADD
-                TICKET</a>
-        </div>
 
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -72,6 +63,32 @@
         </div>
         {% endif %}
         {% endwith %}
+
+        <div class="w-full max-w-4xl mx-auto flex py-3 px-4 items-center justify-between gap-3 bg-white">
+            <div>
+                <form id="delete_all_users" action="/delete_all_ticket" method="post"
+                    class="flex justify-center items-center shadow-md">
+                    <button class="bg-red-500 px-8 py-2 rounded-md text-white text-md" type="submit">Remove All</button>
+                </form>
+            </div>
+            <div class="flex items-center justify-end gap-3">
+                <form action="/tickets" method="get" class="flex justify-center items-center shadow-md">
+                    <a href="/tickets"
+                        class="bg-red-500 flex justify-center items-center rounded-none w-10 h-10 text-white text-lg rounded"
+                        type="submit"><ion-icon name="reload-outline"></ion-icon></a>
+                    <input type="text"
+                        class="leading-none h-10 rounded-none w-36 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        name="search" value="{{ search_term  }}" placeholder="Search..">
+                    <button class="bg-blue-500 rounded-none w-10 h-10 text-white text-lg rounded"
+                        type="submit"><ion-icon name="search-outline"></ion-icon></button>
+                </form>
+                <a href="/add-ticket"
+                    class="text-white block bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">ADD
+                    TICKET</a>
+            </div>
+        </div>
+
+
 
         <!-- Table to display users -->
         <div class="overflow-x-auto shadow-md sm:rounded-lg w-full max-w-4xl mx-auto">
@@ -98,7 +115,8 @@
                                 href="edit-ticket/{{ticket.id}}"><ion-icon name="pencil-outline"></ion-icon></a>
                             <form method="POST" action="{{ url_for('delete_ticket') }}">
                                 <input type="hidden" name="id" value={{ticket.id}}>
-                                <button class="bg-red-500 text-white w-10 h-10 text-lg rounded" type="submit"><ion-icon name="trash-outline"></ion-icon></button>
+                                <button class="bg-red-500 text-white w-10 h-10 text-lg rounded" type="submit"><ion-icon
+                                        name="trash-outline"></ion-icon></button>
                             </form>
                         </td>
                     </tr>
@@ -112,12 +130,63 @@
             </table>
         </div>
 
+        <div class="flex items-center justify-center gap-5 mt-3 max-w-4xl mx-auto">
+            <!-- Previous Button -->
+            {% if pagination.has_prev %}
+            <a href="{{ url_for('tickets', page=pagination.prev_num, search=search_term) }}"
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+                Previous
+            </a>
+            {% else %}
+            <span class="px-4 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed">
+                Previous
+            </span>
+            {% endif %}
+
+            <!-- Page Info -->
+            <span class="text-gray-700">
+                Page {{ pagination.page }} of {{ pagination.pages }}
+            </span>
+
+            <!-- Next Button -->
+            {% if pagination.has_next %}
+            <a href="{{ url_for('tickets', page=pagination.next_num, search=search_term) }}"
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+                Next
+            </a>
+            {% else %}
+            <span class="px-4 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed">
+                Next
+            </span>
+            {% endif %}
+        </div>
+
+
 
 
     </div>
 
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelector('form#delete_all_users').addEventListener("submit", function (e) {
+                e.preventDefault();  // Prevent the form from submitting immediately
+
+                // Show confirmation dialog
+                const confirmDelete = confirm("Do you really want to delete all tickets?");
+
+                if (confirmDelete) {
+                    // If the user confirms, submit the form
+                    this.submit();  // This will submit the form
+                } else {
+                    // If the user cancels, do nothing
+                    return;
+                }
+            });
+        })
+    </script>
 </body>
 
 </html>
