@@ -4,38 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Users List</title>
+    <title>Users</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/682/682055.png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
+<body class="bg-gray-100">
 
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Users List</h1>
+    <!-- Include Header -->
+    {% include "admin/header.html" %}
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div class="mb-4">
-        <ul>
-            {% for category, message in messages %}
-            <li
-                class="text-md text-center {% if category == 'success' %}text-green-500{% elif category == 'error' %}text-red-500{% endif %}">
-                {{ message }}
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-    {% endwith %}
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center mt-10">Users List</h1>
+
+    <!-- Include flash messages -->
+    {% include "flash_messages.html" %}
 
     <!-- Table to display users -->
-    <div class="overflow-x-auto shadow-md sm:rounded-lg w-full max-w-4xl">
+    <div class="overflow-x-auto shadow-md sm:rounded-lg w-full max-w-4xl mx-auto">
         <table class="w-full text-sm text-left text-gray-500 bg-white">
             <thead class="text-xs text-center text-gray-700 uppercase bg-gray-200">
-                <tr>
+                <tr class="">
                     <th scope="col" class="px-6 py-3">ID</th>
                     <th scope="col" class="px-6 py-3">Username</th>
                     <th scope="col" class="px-6 py-3">Email</th>
+                    <th scope="col" class="px-6 py-3">Role</th>
                     <th scope="col" class="px-6 py-3">Date</th>
                     <th scope="col" class="px-6 py-3">Action</th>
                 </tr>
@@ -47,6 +39,13 @@
                     <td class="px-6 py-4 text-gray-800">{{ user.id }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ user.username }}</td>
                     <td class="px-6 py-4 text-gray-800">{{ user.email }}</td>
+                    <td class="px-6 py-4 text-gray-800">
+                        {% if user.role == 0 %}
+                            ADMIN
+                        {% else %}
+                            USER
+                        {% endif %}
+                    </td>
                     <td class="px-6 py-4 text-gray-800">{{ user.created_at_formatted }}</td>
                     <td class="py-4 flex justify-center items-center gap-3">
                         <form method="POST" action="{{ url_for('delete_user') }}">

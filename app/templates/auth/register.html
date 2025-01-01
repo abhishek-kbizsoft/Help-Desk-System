@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/682/682055.png">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -13,21 +14,8 @@
     <div class="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
         <h1 class="text-2xl font-bold text-center mb-8">Register</h1>
 
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div class="mb-4">
-            <ul>
-                {% for category, message in messages %}
-                <li
-                    class="text-md text-center {% if category == 'success' %}text-green-500{% elif category == 'error' %}text-red-500{% endif %}">
-                    {{ message }}
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-        {% endwith %}
+        <!-- Include flash messages -->
+        {% include "flash_messages.html" %}
 
         <!-- Add User Form -->
         <form action="/auth/register" method="POST">
