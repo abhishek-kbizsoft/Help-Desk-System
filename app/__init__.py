@@ -13,11 +13,11 @@ db = SQLAlchemy()
 migrate = Migrate()
 
 def create_app():
-    app = Flask(__name__, static_folder='app/static')
+    app = Flask(__name__, static_folder='static')
 
     # Application Configurations
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'kZD7rHGTSPNhEcfyWTcicgYKwkFhPqK0')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///database.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS', False)
 
 

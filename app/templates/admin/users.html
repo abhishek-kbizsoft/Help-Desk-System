@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Users</title>
+    <title>Admin Users</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/682/682055.png">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="{{ url_for('static', filename='js/tailwind.js') }}"></script>
 </head>
 
 <body class="bg-gray-100">
@@ -28,6 +28,7 @@
                     <th scope="col" class="px-6 py-3">Username</th>
                     <th scope="col" class="px-6 py-3">Email</th>
                     <th scope="col" class="px-6 py-3">Role</th>
+                    <th scope="col" class="px-6 py-3">Tickets</th>
                     <th scope="col" class="px-6 py-3">Date</th>
                     <th scope="col" class="px-6 py-3">Action</th>
                 </tr>
@@ -41,14 +42,15 @@
                     <td class="px-6 py-4 text-gray-800">{{ user.email }}</td>
                     <td class="px-6 py-4 text-gray-800">
                         {% if user.role == 0 %}
-                            ADMIN
+                        ADMIN
                         {% else %}
-                            USER
+                        USER
                         {% endif %}
                     </td>
+                    <td class="px-6 py-4 text-gray-800">{{ user.ticket_count}}</td>
                     <td class="px-6 py-4 text-gray-800">{{ user.created_at_formatted }}</td>
                     <td class="py-4 flex justify-center items-center gap-3">
-                        <form method="POST" action="{{ url_for('delete_user') }}">
+                        <form method="POST" action="{{ url_for('admin_delete_user') }}">
                             <input type="hidden" name="id" value={{user.id}}>
                             <button class="bg-red-500 text-white w-10 h-10 text-lg rounded" type="submit"><ion-icon
                                     name="trash-outline"></ion-icon></button>
@@ -58,15 +60,21 @@
                 {% endfor %}
                 {% else %}
                 <tr>
-                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">No users found.</td>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">No users found.</td>
                 </tr>
                 {% endif %}
             </tbody>
         </table>
 
-        <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-        <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
     </div>
+
+    <div class="max-w-4xl mx-auto mt-3">
+        <h1 class="text-center text-sm font-normal tracking-wide">Total users: {{users_count}}</h1>
+    </div>
+
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </body>
 
 </html>

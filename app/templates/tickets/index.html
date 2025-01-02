@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tickets</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/682/682055.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- <script src="{{ url_for('static', filename='js/tailwind.js') }}"></script> -->
+    <script src="{{ url_for('static', filename='js/tailwind.js') }}"></script>
 </head>
 
 <body class="bg-gray-100">
@@ -44,6 +43,16 @@
                     <button class="bg-blue-500 rounded-none w-10 h-10 text-white text-lg rounded hover:bg-blue-600"
                         type="submit"><ion-icon name="search-outline"></ion-icon></button>
                 </form>
+                <!-- <form class="max-w-sm">
+                    <label for="file-input" class="sr-only">Choose file</label>
+                    <input type="file" name="file-input" id="file-input" class="block w-full border border-gray-200 bg-white text-black shadow-sm rounded-lg text-xs 
+                                  focus:z-10 focus:border-blue-500 focus:ring-blue-500 
+                                  disabled:opacity-50 disabled:pointer-events-none 
+                                  file:bg-white file:border-0 
+                                  file:me-4
+                                  file:py-3 file:px-4" accept=".csv">
+                    <button type="submit">Submit</button>
+                </form> -->
                 <a href="/add-ticket"
                     class="text-white block bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">ADD
                     TICKET</a>
@@ -68,7 +77,7 @@
                 <tbody>
                     {% if tickets %}
                     {% for ticket in tickets %}
-                    <tr class="border-b hover:bg-gray-100 text-center">
+                    <tr class="border-b text-center {% if ticket.status == 0 %} bg-green-50 {% elif ticket.status == 1 %} bg-yellow-50 {% elif ticket.status == 2 %} bg-red-50 {% endif %}">
                         <!-- <td class="px-6 py-4 text-gray-800">{{ ticket.user_id }}</td> -->
                         <td class="px-6 py-4 text-gray-800">{{ ticket.title }}</td>
                         <td class="px-6 py-4 text-gray-800">{{ ticket.description }}</td>
@@ -97,16 +106,16 @@
                     {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">No tickets found.</td>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">No tickets found</td>
                     </tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
 
-        <div class="max-w-4xl mx-auto mt-3">
+        <!-- <div class="max-w-4xl mx-auto mt-3">
             <h1 class="text-center text-sm font-normal tracking-wide">Total tickets: {{tickets_count}}</h1>
-        </div>
+        </div> -->
         <div class="flex items-center justify-center gap-3 mt-3 max-w-4xl mx-auto">
             <!-- Pagination -->
             {% for page_num in pagination.iter_pages() %}
@@ -138,24 +147,7 @@
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            document.querySelector('form#delete_all_users').addEventListener("submit", function (e) {
-                e.preventDefault();  // Prevent the form from submitting immediately
-
-                // Show confirmation dialog
-                const confirmDelete = confirm("Do you really want to delete all tickets?");
-
-                if (confirmDelete) {
-                    // If the user confirms, submit the form
-                    this.submit();  // This will submit the form
-                } else {
-                    // If the user cancels, do nothing
-                    return;
-                }
-            });
-        })
-    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 
 </html>

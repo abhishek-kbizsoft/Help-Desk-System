@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from . import db  # Import db from __init__.py
 from .models import User, Ticket
 import os
+import csv
 from datetime import timedelta
 
 # Define routes in a function so that they can be added to the app later
@@ -43,6 +44,55 @@ def init_app(app):
 
         # print("app.template_folder", app.template_folder)
         return render_template('auth/login.html')
+        
+    @app.route('/forgot-password')
+    def forgot_password_page():
+        # Check if the user is already logged in
+        if 'user_id' in session:
+            flash("You are already logged in", "success")
+            return redirect(url_for('tickets'))
+
+        return render_template('auth/forgot-password.html')
+    
+    @app.route('/profile')
+    def profile_page():
+        # Check if the user is already logged in
+        if 'user_id' in session:
+            flash("You are already logged in", "success")
+            return redirect(url_for('tickets'))
+
+        return render_template('auth/profile.html')
+        
+    
+    @app.route('/auth/forgot-password', methods=['POST'])
+    def forgot_user_password():
+        email = request.form.get('email')
+        # Get password input from the user
+        new_password = request.form.get('new_password')
+        
+        # Check if the email already exists in the database
+        existing_user = User.query.filter_by(email=email).first()
+        
+        if existing_user:
+            
+            # Check if the password length is less than 8 characters
+            if len(new_password) < 8:
+                flash("Password must be at least 8 characters long.", "error")
+                return redirect(url_for('forgot_password_page'))
+            
+            # Generate a hashed password before storing it
+            hashed_password = generate_password_hash(new_password)
+            
+            # Update the user's password in the database
+            existing_user.password = hashed_password
+            db.session.commit()  # Commit the changes to the database
+            
+            flash('Password updated successfully!', 'success')  # Success message
+            return redirect(url_for('login_page'))  # Redirect to login page after updating the password
+        else:
+            flash('Email not found. Please check the email address and try again.', 'error')
+            return redirect(url_for('forgot_password_page'))  # Redirect back to the forgot password page
+            
 
     @app.route('/auth/register', methods=['POST'])
     def user_register():
@@ -103,9 +153,9 @@ def init_app(app):
         if not check_password_hash(user.password, password):
             flash("Invalid email or password.", "error")
             return redirect(url_for('login_page'))
-        
+
         if user.role == 0:
-            flash("You don't have admin rights.", "error")
+            flash("You have admin rights", "error")
             return redirect(url_for('login_page'))
 
         # Successful login
@@ -167,7 +217,7 @@ def init_app(app):
         # Format the `created_at` field for each ticket on the current page
         for ticket in pagination.items:
             ticket.created_at_formatted = ticket.created_at.strftime(
-                '%d-%m-%Y')
+                '%d %b, %Y')
 
         # Render the template with paginated tickets
         return render_template(
@@ -219,6 +269,10 @@ def init_app(app):
         title = request.form.get('title')
         description = request.form.get('description')
 
+        if not title or not description:
+            flash("All fields are required.", "error")
+            return redirect(url_for('edit_ticket_view', ticket_id=ticket_id))
+
         # Update ticket fields
         ticket.title = title
         ticket.description = description
@@ -238,6 +292,11 @@ def init_app(app):
         if user is None:
             flash("User not found.", "error")
             return redirect(url_for('login_page'))
+
+        # Check for empty fields
+        if not title or not description:
+            flash("All fields are required.", "error")
+            return redirect(url_for('add_ticket'))  # Redirect to the form page
 
         new_ticket = Ticket(
             title=title, description=description, user_id=user.id, status=1)
@@ -293,7 +352,7 @@ def init_app(app):
     def user_logout():
         session.pop('user_id', None)
         session.pop('user_username', None)
-        
+
         flash("You have been logged out.", "success")
         return redirect(url_for('login_page'))
 
@@ -358,31 +417,72 @@ def init_app(app):
         all_users = User.query.order_by(User.id.desc()).all()
 
         for user in all_users:
-            user.created_at_formatted = user.created_at.strftime('%d-%m-%Y')
+            user.created_at_formatted = user.created_at.strftime('%d %b, %Y')
+            user.ticket_count = Ticket.query.filter_by(user_id=user.id).count()
 
-        return render_template('admin/users.html', users=all_users)
+        users_count = User.query.count()
+
+        return render_template('admin/users.html', users=all_users, users_count=users_count)
 
     @app.route('/admin/tickets')
     def admin_tickets():
-        
+
         if 'admin_id' not in session:
             flash("You must be logged in to view this page.", "error")
             return redirect(url_for('admin_index'))
-        
+
+        # Fetch the current user based on user_id stored in session
+        current_user = User.query.get(session['admin_id'])
+
+        # Check if the user is an admin (role == 0)
+        if current_user.role != 0:
+            flash("You do not have permission to view this page.", "error")
+            return redirect(url_for('admin_index'))  # Redirect to login page
+
+        search_term = request.args.get('search', '')
+        status_term = request.args.get('status', '')
+
         page = request.args.get('page', 1, type=int)
         all_tickets = Ticket.query.all()
         per_page = 5
-        
-        pagination = Ticket.query.order_by(Ticket.id.desc()).paginate(page=page, per_page=per_page)
-        all_tickets = pagination.items  # Get tickets for the current page
 
+        query = Ticket.query
+
+        # Apply search filter if a search term is provided
+        if search_term:
+            query = query.filter(
+                (Ticket.title.contains(search_term) |
+                 Ticket.description.contains(search_term))
+            )
+
+        # if status_term and status_term != 'all':  # 'all' means no status filter
+        #     query = query.filter(Ticket.status == int(status_term))
+                
+
+        # Apply ordering and pagination
+        pagination = query.order_by(Ticket.id.desc()).paginate(
+            page=page, per_page=per_page)
+
+        # Get the tickets for the current page
+        all_tickets = pagination.items
+
+        ticket_counts = query.count()
+
+        # Process tickets to format created_at (optional)
         for ticket in all_tickets:
             ticket.created_at_formatted = ticket.created_at.strftime(
-                '%d-%m-%Y')
+                '%d %b, %Y')
             ticket.username = ticket.user.username
+            ticket.email = ticket.user.email
 
-        return render_template('admin/tickets.html', tickets=all_tickets, pagination=pagination)
-    
+        return render_template(
+            'admin/tickets.html',
+            tickets=all_tickets,
+            pagination=pagination,
+            ticket_counts=ticket_counts,
+            search_term=search_term
+        )
+
     @app.route('/update_ticket_status/<int:ticket_id>', methods=['POST'])
     def update_ticket_status(ticket_id):
         if 'admin_id' not in session:
@@ -399,8 +499,6 @@ def init_app(app):
         else:
             return jsonify({"error": "Ticket not found"}), 404
 
-
-    
     @app.route("/admin_delete_ticket", methods=['POST'])
     def admin_delete_ticket():
         ticket_id = request.form.get('id')
@@ -418,11 +516,33 @@ def init_app(app):
             flash("Ticket not found", "error")
 
         return redirect(url_for('admin_tickets'))
+    
+    @app.route("/admin_delete_user", methods=['POST'])
+    def admin_delete_user():
+        user_id = request.form.get('id')
+
+        # Find the user by ID
+        user = User.query.get(user_id)
+
+        if user:
+            # Delete all tickets related to this user
+            Ticket.query.filter_by(user_id=user_id).delete()
+
+            # Delete the user
+            db.session.delete(user)
+            db.session.commit()
+
+            flash("User deleted successfully", "success")
+        else:
+            # If user does not exist, show error
+            flash("User not found", "error")
+
+        return redirect(url_for('admin_users'))
 
     @app.route('/admin/auth/logout')
     def admin_logout():
         session.pop('admin_id', None)
         session.pop('admin_username', None)
-        
+
         flash("You have been logged out.", "success")
         return redirect(url_for('admin_index'))
