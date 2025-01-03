@@ -22,8 +22,8 @@
     <!-- Table to display users -->
     <div class="overflow-x-auto shadow-md sm:rounded-lg w-full max-w-4xl mx-auto">
 
-        <div class="w-full max-w-4xl mx-auto flex py-3 px-4 items-center justify-between gap-3 bg-white">
-            <div class="invisible">
+        <div class="w-full max-w-4xl mx-auto flex py-3 px-4 items-center justify-end gap-3 bg-white">
+            <!-- <div class="invisible">
                 {% if tickets %}
                 <form id="delete_all_users" action="/delete_all_ticket" method="post"
                     class="flex justify-center items-center shadow-md">
@@ -32,7 +32,7 @@
                 </form>
                 {% else %}
                 {% endif %}
-            </div>
+            </div> -->
 
             <div class="flex items-center justify-end gap-3">
                 <form action="/admin/tickets" method="get" class="flex justify-center items-center shadow-md">
@@ -78,7 +78,6 @@
                     <td class="px-6 py-4 text-gray-800">
                         <div class="flex flex-col item-center">
                             <span>{{ ticket.username }}</span>
-                            <span>{{ ticket.email }}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-gray-800">{{ ticket.title }}</td>

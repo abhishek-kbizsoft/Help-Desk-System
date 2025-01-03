@@ -13,10 +13,6 @@ env/
 # Environment variables
 .env
 
-# SQLite database files
-*.db
-*.sqlite3
-
 # Logs
 *.log
 logs/

@@ -44,7 +44,7 @@ def init_app(app):
 
         # print("app.template_folder", app.template_folder)
         return render_template('auth/login.html')
-        
+
     @app.route('/forgot-password')
     def forgot_password_page():
         # Check if the user is already logged in
@@ -53,46 +53,59 @@ def init_app(app):
             return redirect(url_for('tickets'))
 
         return render_template('auth/forgot-password.html')
-    
+
     @app.route('/profile')
     def profile_page():
-        # Check if the user is already logged in
-        if 'user_id' in session:
-            flash("You are already logged in", "success")
-            return redirect(url_for('tickets'))
+        if 'user_id' not in session:
+            flash("You must be logged in to view this page.", "error")
+            return redirect(url_for('login_page'))
 
-        return render_template('auth/profile.html')
-        
-    
+        # Get the current user's ID from the session
+        current_user_id = session['user_id']
+
+        # Fetch the user from the database based on the user_id
+        user = User.query.get(current_user_id)
+
+        # Check if the user exists
+        if not user:
+            flash("User not found.", "error")
+            return redirect(url_for('login_page'))
+
+        # Pass the user's details to the template
+        return render_template('auth/profile.html', user=user)
+
     @app.route('/auth/forgot-password', methods=['POST'])
     def forgot_user_password():
         email = request.form.get('email')
         # Get password input from the user
         new_password = request.form.get('new_password')
-        
+
         # Check if the email already exists in the database
         existing_user = User.query.filter_by(email=email).first()
-        
+
         if existing_user:
-            
+
             # Check if the password length is less than 8 characters
             if len(new_password) < 8:
                 flash("Password must be at least 8 characters long.", "error")
                 return redirect(url_for('forgot_password_page'))
-            
+
             # Generate a hashed password before storing it
             hashed_password = generate_password_hash(new_password)
-            
+
             # Update the user's password in the database
             existing_user.password = hashed_password
             db.session.commit()  # Commit the changes to the database
-            
-            flash('Password updated successfully!', 'success')  # Success message
-            return redirect(url_for('login_page'))  # Redirect to login page after updating the password
+
+            flash('Password updated successfully!',
+                  'success')  # Success message
+            # Redirect to login page after updating the password
+            return redirect(url_for('login_page'))
         else:
-            flash('Email not found. Please check the email address and try again.', 'error')
-            return redirect(url_for('forgot_password_page'))  # Redirect back to the forgot password page
-            
+            flash(
+                'Email not found. Please check the email address and try again.', 'error')
+            # Redirect back to the forgot password page
+            return redirect(url_for('forgot_password_page'))
 
     @app.route('/auth/register', methods=['POST'])
     def user_register():
@@ -414,7 +427,26 @@ def init_app(app):
             flash("You do not have permission to view this page.", "error")
             return redirect(url_for('admin_index'))  # Redirect to login page
 
-        all_users = User.query.order_by(User.id.desc()).all()
+        search_term = request.args.get('search', '')
+        page = request.args.get('page', 1, type=int)
+        per_page = 5
+
+        query = User.query
+
+        # Apply search filter if a search term is provided
+        if search_term:
+            query = query.filter(
+                (User.username.contains(search_term) |
+                 User.email.contains(search_term))
+            )
+
+        # Apply ordering and pagination
+        pagination = query.order_by(User.id.desc()).paginate(
+            page=page, per_page=per_page)
+
+        all_users = pagination.items
+
+        users_count = query.count()
 
         for user in all_users:
             user.created_at_formatted = user.created_at.strftime('%d %b, %Y')
@@ -422,7 +454,13 @@ def init_app(app):
 
         users_count = User.query.count()
 
-        return render_template('admin/users.html', users=all_users, users_count=users_count)
+        return render_template(
+            'admin/users.html',
+            users=all_users,
+            search_term=search_term,
+            pagination=pagination,
+            users_count=users_count
+        )
 
     @app.route('/admin/tickets')
     def admin_tickets():
@@ -443,7 +481,6 @@ def init_app(app):
         status_term = request.args.get('status', '')
 
         page = request.args.get('page', 1, type=int)
-        all_tickets = Ticket.query.all()
         per_page = 5
 
         query = Ticket.query
@@ -457,7 +494,6 @@ def init_app(app):
 
         # if status_term and status_term != 'all':  # 'all' means no status filter
         #     query = query.filter(Ticket.status == int(status_term))
-                
 
         # Apply ordering and pagination
         pagination = query.order_by(Ticket.id.desc()).paginate(
@@ -516,7 +552,7 @@ def init_app(app):
             flash("Ticket not found", "error")
 
         return redirect(url_for('admin_tickets'))
-    
+
     @app.route("/admin_delete_user", methods=['POST'])
     def admin_delete_user():
         user_id = request.form.get('id')
