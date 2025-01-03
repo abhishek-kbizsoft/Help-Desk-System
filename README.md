@@ -4,12 +4,14 @@ Follow these steps to set up and run the project on your local machine.
 1. **Python**: Ensure Python 3.9 or higher is installed on your system.  
    - [Download Python](https://www.python.org/downloads/) if not already installed.  
    - Verify installation by running:
+     ```bash
      python --version
      ```
 
 2. **Git**: Ensure Git is installed for cloning the repository.  
    - [Download Git](https://git-scm.com/downloads) if not already installed.  
    - Verify installation by running:
+     ```bash
      git --version
      ```
 
